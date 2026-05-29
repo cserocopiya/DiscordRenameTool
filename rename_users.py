@@ -155,8 +155,7 @@ class RenameBot(discord.Client):
                 not_found_count += 1
                 continue
 
-            current_nick = member.nick if member.nick else member.name
-            if current_nick == target_nickname:
+            if member.nick == target_nickname:
                 print(f"[SKIP] {member.name} already has nickname '{target_nickname}'")
                 skipped_count += 1
                 continue

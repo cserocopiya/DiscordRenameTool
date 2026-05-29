@@ -178,13 +178,11 @@ client.once('ready', async () => {
                 continue;
             }
 
-            const currentNick = member.nickname || member.user.username;
-            if (currentNick === targetNickname) {
+            if (member.nickname === targetNickname) {
                 console.log(`[SKIP] ${member.user.tag} already has nickname '${targetNickname}'`);
                 skippedCount++;
                 continue;
             }
-
             try {
                 console.log(`Renaming ${member.user.tag} -> '${targetNickname}'...`);
                 await member.setNickname(targetNickname);
