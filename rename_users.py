@@ -28,7 +28,52 @@ class RenameBot(discord.Client):
         self.filename = os.getenv("LIST_FILE", "list.txt")
         self.mappings = {}
 
+    def get_manual_input(self):
+        print("\n--- Ввод данных вручную ---")
+        print("Вводите никнейм и ID через пробел (например: PlayerName 123456789012345).")
+        print("Для завершения ввода просто нажмите Enter на пустой строке.\n")
+
+        count = 0
+        while True:
+            count += 1
+            try:
+                val = input(f"[{count}] Ник и ID: ").strip()
+            except EOFError:
+                break
+            if not val:
+                break
+
+            parts = val.split()
+            if len(parts) < 2:
+                print("Warning: Некорректный формат. Нужно ввести ник и ID через пробел.")
+                count -= 1
+                continue
+
+            discord_id_str = parts[-1]
+            nickname = " ".join(parts[:-1])
+
+            if not discord_id_str.isdigit():
+                print(f"Warning: Некорректный Discord ID: '{discord_id_str}'. Он должен состоять только из цифр.")
+                count -= 1
+                continue
+
+            self.mappings[int(discord_id_str)] = nickname
+        
+        print(f"\nВведено вручную {len(self.mappings)} участников.")
+        return True
+
     def load_mappings(self):
+        print("Выберите источник данных:")
+        print("1. Загрузить из файла")
+        print("2. Ввести вручную прямо сейчас")
+        try:
+            choice = input("Введите 1 или 2: ").strip()
+        except EOFError:
+            choice = "1"
+
+        if choice == "2":
+            return self.get_manual_input()
+
         if not os.path.exists(self.filename):
             print(f"Error: File {self.filename} not found.")
             return False

@@ -18,7 +18,68 @@ const client = new Client({
     ]
 });
 
+function askQuestion(query) {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    return new Promise(resolve => rl.question(query, ans => {
+        rl.close();
+        resolve(ans);
+    }));
+}
+
+async function getManualInput() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const mappings = new Map();
+    console.log("\n--- Ввод данных вручную ---");
+    console.log("Вводите никнейм и ID через пробел (например: PlayerName 123456789012345).");
+    console.log("Для завершения ввода просто нажмите Enter на пустой строке.\n");
+
+    let count = 0;
+    while (true) {
+        count++;
+        const answer = await new Promise(resolve => rl.question(`[${count}] Ник и ID: `, resolve));
+        const trimmed = answer.trim();
+        if (!trimmed) {
+            break;
+        }
+
+        const parts = trimmed.split(/\s+/);
+        if (parts.length < 2) {
+            console.log("Warning: Некорректный формат. Нужно ввести ник и ID через пробел.");
+            count--;
+            continue;
+        }
+
+        const discordId = parts[parts.length - 1];
+        const nickname = parts.slice(0, -1).join(' ');
+
+        if (!/^\d+$/.test(discordId)) {
+            console.log(`Warning: Некорректный Discord ID: '${discordId}'. Он должен состоять только из цифр.`);
+            count--;
+            continue;
+        }
+
+        mappings.set(discordId, nickname);
+    }
+    rl.close();
+    console.log(`\nВведено вручную ${mappings.size} участников.`);
+    return mappings;
+}
+
 async function loadMappings() {
+    const choice = await askQuestion("Выберите источник данных:\n1. Загрузить из файла\n2. Ввести вручную прямо сейчас\nВведите 1 или 2: ");
+    const trimmedChoice = choice.trim();
+
+    if (trimmedChoice === '2') {
+        return await getManualInput();
+    }
+
     const filename = process.env.LIST_FILE || 'list.txt';
     const mappings = new Map();
 
@@ -41,7 +102,7 @@ async function loadMappings() {
 
         const parts = trimmed.split(/\s+/);
         if (parts.length < 2) {
-            console.warn(`Warning: Line {lineNo} is malformed: '${trimmed}'`);
+            console.warn(`Warning: Line ${lineNo} is malformed: '${trimmed}'`);
             continue;
         }
 
